@@ -5,8 +5,9 @@
 #define VALOR_NAVIO 3
 #define AGUA 0
 #define ACERTO -1
+#define TIRO_ERRADO -2
 
-// Inicializa o tabuleiro com água
+// Inicializa o tabuleiro com água (~)
 void inicializarTabuleiro(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO]) {
     for (int i = 0; i < TAM_TABULEIRO; i++) {
         for (int j = 0; j < TAM_TABULEIRO; j++) {
@@ -15,24 +16,32 @@ void inicializarTabuleiro(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO]) {
     }
 }
 
-// Exibe o tabuleiro com símbolos
+// Exibe o tabuleiro com símbolos e índices
 void exibirTabuleiro(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO]) {
-    printf("Tabuleiro:\n");
+    printf("\n    ");
+    for (int j = 0; j < TAM_TABULEIRO; j++)
+        printf("%d ", j);  // Índice das colunas
+    printf("\n");
+
     for (int i = 0; i < TAM_TABULEIRO; i++) {
+        printf("%2d |", i);  // Índice das linhas
         for (int j = 0; j < TAM_TABULEIRO; j++) {
             char simbolo;
             if (tabuleiro[i][j] == AGUA)
-                simbolo = '~';
+                simbolo = '~';          // Água
             else if (tabuleiro[i][j] == VALOR_NAVIO)
-                simbolo = 'N';
+                simbolo = '~';          // Esconde navio
             else if (tabuleiro[i][j] == ACERTO)
-                simbolo = 'X';
+                simbolo = 'X';          // Acertou navio
+            else if (tabuleiro[i][j] == TIRO_ERRADO)
+                simbolo = '.';          // Tiro na água
             else
-                simbolo = '?';
-            printf("%c ", simbolo);
+                simbolo = '?';          // Desconhecido
+            printf(" %c", simbolo);
         }
         printf("\n");
     }
+    printf("\n");
 }
 
 // Posiciona navio horizontal
@@ -63,18 +72,23 @@ int posicionarNavioVertical(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO], int lin
     return 1;
 }
 
-// Função de ataque
+// Ataca uma posição do tabuleiro
 int atacar(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO], int linha, int coluna) {
     if (linha < 0 || linha >= TAM_TABULEIRO || coluna < 0 || coluna >= TAM_TABULEIRO)
-        return -1; // Fora dos limites
+        return -1; // Coordenadas inválidas
+
     if (tabuleiro[linha][coluna] == VALOR_NAVIO) {
         tabuleiro[linha][coluna] = ACERTO;
         return 1; // Acertou
+    } else if (tabuleiro[linha][coluna] == AGUA) {
+        tabuleiro[linha][coluna] = TIRO_ERRADO;
+        return 0; // Errou
     }
-    return 0; // Errou
+
+    return 2; // Já atacou essa posição antes
 }
 
-// Verifica se todos os navios foram atingidos
+// Verifica se todos os navios foram destruídos
 int verificarVitoria(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO]) {
     for (int i = 0; i < TAM_TABULEIRO; i++) {
         for (int j = 0; j < TAM_TABULEIRO; j++) {
@@ -82,7 +96,7 @@ int verificarVitoria(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO]) {
                 return 0; // Ainda há navios
         }
     }
-    return 1; // Todos os navios foram atingidos
+    return 1; // Vitória!
 }
 
 int main() {
@@ -99,7 +113,7 @@ int main() {
         return 1;
     }
 
-    // Loop de ataque
+    // Loop de ataques
     int linha, coluna;
     while (!verificarVitoria(tabuleiro)) {
         exibirTabuleiro(tabuleiro);
@@ -111,11 +125,13 @@ int main() {
             printf("💥 Acertou!\n");
         else if (resultado == 0)
             printf("🌊 Errou!\n");
+        else if (resultado == 2)
+            printf("⚠️ Já atacou essa posição.\n");
         else
             printf("❌ Coordenadas inválidas!\n");
     }
 
+    exibirTabuleiro(tabuleiro); // Exibe o tabuleiro final
     printf("🎉 Todos os navios foram destruídos! Fim de jogo.\n");
     return 0;
 }
-
