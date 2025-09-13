@@ -3,89 +3,119 @@
 #define TAM_TABULEIRO 10
 #define TAM_NAVIO 3
 #define VALOR_NAVIO 3
+#define AGUA 0
+#define ACERTO -1
 
-// Função para inicializar o tabuleiro com 0 (água)
+// Inicializa o tabuleiro com água
 void inicializarTabuleiro(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO]) {
     for (int i = 0; i < TAM_TABULEIRO; i++) {
         for (int j = 0; j < TAM_TABULEIRO; j++) {
-            tabuleiro[i][j] = 0;
+            tabuleiro[i][j] = AGUA;
         }
     }
 }
 
-// Função para imprimir o tabuleiro no console
+// Exibe o tabuleiro com símbolos
 void exibirTabuleiro(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO]) {
     printf("Tabuleiro:\n");
     for (int i = 0; i < TAM_TABULEIRO; i++) {
         for (int j = 0; j < TAM_TABULEIRO; j++) {
-            printf("%d ", tabuleiro[i][j]);
+            char simbolo;
+            if (tabuleiro[i][j] == AGUA)
+                simbolo = '~';
+            else if (tabuleiro[i][j] == VALOR_NAVIO)
+                simbolo = 'N';
+            else if (tabuleiro[i][j] == ACERTO)
+                simbolo = 'X';
+            else
+                simbolo = '?';
+            printf("%c ", simbolo);
         }
         printf("\n");
     }
 }
 
-// Função para posicionar navio horizontal
+// Posiciona navio horizontal
 int posicionarNavioHorizontal(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO], int linha, int coluna) {
     if (coluna + TAM_NAVIO > TAM_TABULEIRO)
-        return 0; // Fora dos limites
-
-    // Verifica sobreposição
+        return 0;
     for (int i = 0; i < TAM_NAVIO; i++) {
-        if (tabuleiro[linha][coluna + i] != 0)
-            return 0; // Sobreposição
+        if (tabuleiro[linha][coluna + i] != AGUA)
+            return 0;
     }
-
-    // Posiciona o navio
     for (int i = 0; i < TAM_NAVIO; i++) {
         tabuleiro[linha][coluna + i] = VALOR_NAVIO;
     }
-
     return 1;
 }
 
-// Função para posicionar navio vertical
+// Posiciona navio vertical
 int posicionarNavioVertical(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO], int linha, int coluna) {
     if (linha + TAM_NAVIO > TAM_TABULEIRO)
-        return 0; // Fora dos limites
-
-    // Verifica sobreposição
+        return 0;
     for (int i = 0; i < TAM_NAVIO; i++) {
-        if (tabuleiro[linha + i][coluna] != 0)
-            return 0; // Sobreposição
+        if (tabuleiro[linha + i][coluna] != AGUA)
+            return 0;
     }
-
-    // Posiciona o navio
     for (int i = 0; i < TAM_NAVIO; i++) {
         tabuleiro[linha + i][coluna] = VALOR_NAVIO;
     }
-
     return 1;
+}
+
+// Função de ataque
+int atacar(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO], int linha, int coluna) {
+    if (linha < 0 || linha >= TAM_TABULEIRO || coluna < 0 || coluna >= TAM_TABULEIRO)
+        return -1; // Fora dos limites
+    if (tabuleiro[linha][coluna] == VALOR_NAVIO) {
+        tabuleiro[linha][coluna] = ACERTO;
+        return 1; // Acertou
+    }
+    return 0; // Errou
+}
+
+// Verifica se todos os navios foram atingidos
+int verificarVitoria(int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO]) {
+    for (int i = 0; i < TAM_TABULEIRO; i++) {
+        for (int j = 0; j < TAM_TABULEIRO; j++) {
+            if (tabuleiro[i][j] == VALOR_NAVIO)
+                return 0; // Ainda há navios
+        }
+    }
+    return 1; // Todos os navios foram atingidos
 }
 
 int main() {
     int tabuleiro[TAM_TABULEIRO][TAM_TABULEIRO];
-
-    // Inicializa o tabuleiro com 0
     inicializarTabuleiro(tabuleiro);
 
-    // Coordenadas de início para cada navio (definidas no código)
-    int linhaHorizontal = 2, colunaHorizontal = 4; // Navio horizontal começa em (2,4)
-    int linhaVertical = 5, colunaVertical = 1;     // Navio vertical começa em (5,1)
-
-    // Tenta posicionar o navio horizontal
-    if (!posicionarNavioHorizontal(tabuleiro, linhaHorizontal, colunaHorizontal)) {
-        printf("Erro ao posicionar o navio horizontal!\n");
+    // Posiciona navios
+    if (!posicionarNavioHorizontal(tabuleiro, 2, 4)) {
+        printf("Erro ao posicionar navio horizontal!\n");
+        return 1;
+    }
+    if (!posicionarNavioVertical(tabuleiro, 5, 1)) {
+        printf("Erro ao posicionar navio vertical!\n");
         return 1;
     }
 
-    // Tenta posicionar o navio vertical
-    if (!posicionarNavioVertical(tabuleiro, linhaVertical, colunaVertical)) {
-        printf("Erro ao posicionar o navio vertical!\n");
-        return 1;
+    // Loop de ataque
+    int linha, coluna;
+    while (!verificarVitoria(tabuleiro)) {
+        exibirTabuleiro(tabuleiro);
+        printf("Digite linha e coluna para atacar (0 a 9): ");
+        scanf("%d %d", &linha, &coluna);
+
+        int resultado = atacar(tabuleiro, linha, coluna);
+        if (resultado == 1)
+            printf("💥 Acertou!\n");
+        else if (resultado == 0)
+            printf("🌊 Errou!\n");
+        else
+            printf("❌ Coordenadas inválidas!\n");
     }
 
-    // Exibe o tabuleiro final com os navios posicionados
-    exibirTabuleiro(tabuleiro);
-
+    printf("🎉 Todos os navios foram destruídos! Fim de jogo.\n");
     return 0;
 }
+
